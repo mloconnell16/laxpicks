@@ -796,7 +796,7 @@ const Icons = {
 
 // ─── APP ─────────────────────────────────────────────────────────────────────
 export default function LaxPicks({ authActions }) {
-  const [page, setPage] = useState(authActions?.user ? "dashboard" : "auth");
+  const [page, setPage] = useState("dashboard");
   const [authMode, setAuthMode] = useState("login");
   const [picks, setPicks] = useState({});
   const [bracketPicks, setBracketPicks] = useState({});
@@ -818,10 +818,10 @@ export default function LaxPicks({ authActions }) {
   const [authName,  setAuthName]  = useState("");
   const [authError, setAuthError] = useState("");
 
-  // If user is logged in, show dashboard
-  useEffect(() => {
-    if (authActions?.user && page === "auth") {
-      setPage("dashboard");
+ // Redirect to auth if not logged in
+useEffect(() => {
+    if (!authActions?.user) {
+      setPage("auth");
     }
   }, [authActions?.user]);
 
