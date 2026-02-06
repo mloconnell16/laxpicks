@@ -25,9 +25,10 @@ export default function App() {
     signup: (email, pass) => createUserWithEmailAndPassword(auth, email, pass),
     logout: () => signOut(auth),
     user,
+    loading,
   };
 
-  if (loading) return <div style={{ color: "#fff", padding: 40 }}>Loading...</div>;
+  if (loading) return <div style={{ background: "#0a0e14", color: "#fff", padding: 40, minHeight: "100vh" }}>Loading...</div>;
 
   return <LaxPicks authActions={authActions} />;
 }
