@@ -795,10 +795,9 @@ const Icons = {
 };
 
 // ─── APP ─────────────────────────────────────────────────────────────────────
-export default function App() {
-  const [page, setPage] = useState("auth");
+export default function LaxPicks({ authActions }) {
+  const [page, setPage] = useState(authActions?.user ? "dashboard" : "auth");
   const [authMode, setAuthMode] = useState("login");
-  const [currentUser, setCurrentUser] = useState(null);
   const [picks, setPicks] = useState({});
   const [bracketPicks, setBracketPicks] = useState({});
   const [championPick, setChampionPick] = useState(null); // null = not yet picked
@@ -817,16 +816,35 @@ export default function App() {
   const [authEmail, setAuthEmail] = useState("");
   const [authPass,  setAuthPass]  = useState("");
   const [authName,  setAuthName]  = useState("");
+  const [authError, setAuthError] = useState("");
 
-  const handleLogin = () => {
+  // If user is logged in, show dashboard
+  useEffect(() => {
+    if (authActions?.user && page === "auth") {
+      setPage("dashboard");
+    }
+  }, [authActions?.user]);
+
+  const handleLogin = async () => {
     if (!authEmail || !authPass) return;
-    setCurrentUser({ name: "You", email: authEmail, avatar: "YO" });
-    setPage("dashboard");
+    setAuthError("");
+    try {
+      await authActions.login(authEmail, authPass);
+      setPage("dashboard");
+    } catch (err) {
+      setAuthError(err.message);
+    }
   };
-  const handleSignup = () => {
+  
+  const handleSignup = async () => {
     if (!authEmail || !authPass || !authName) return;
-    setCurrentUser({ name: authName, email: authEmail, avatar: authName.slice(0,2).toUpperCase() });
-    setPage("dashboard");
+    setAuthError("");
+    try {
+      await authActions.signup(authEmail, authPass);
+      setPage("dashboard");
+    } catch (err) {
+      setAuthError(err.message);
+    }
   };
 
   const handlePick = (gameId, teamId) => setPicks((p) => ({ ...p, [gameId]: teamId }));
@@ -844,6 +862,7 @@ export default function App() {
               <p>NCAA Lacrosse Pick'em & Brackets</p>
             </div>
             <h2>{authMode === "login" ? "Welcome Back" : "Create Account"}</h2>
+            {authError && <div style={{color: '#ff4444', fontSize: 13, marginBottom: 12}}>{authError}</div>}
             {authMode === "signup" && (
               <div className="form-group">
                 <label>Name</label>
@@ -903,11 +922,11 @@ export default function App() {
         ))}
       </div>
       <div className="sidebar-bottom">
-        <div className="user-row" onClick={() => { setCurrentUser(null); setPage("auth"); }}>
-          <div className="avatar-sm">{currentUser?.avatar}</div>
+        <div className="user-row" onClick={() => { authActions.logout(); setPage("auth"); }}>
+          <div className="avatar-sm">{authActions?.user?.email?.slice(0,2).toUpperCase() || "YO"}</div>
           <div className="user-info">
-            <div className="user-name">{currentUser?.name}</div>
-            <div className="user-email">{currentUser?.email}</div>
+            <div className="user-name">{authActions?.user?.displayName || "You"}</div>
+            <div className="user-email">{authActions?.user?.email}</div>
           </div>
         </div>
       </div>
@@ -918,7 +937,7 @@ export default function App() {
     <div className="mobile-topbar">
       <h1>Lax<span>Picks</span></h1>
       <div className="topbar-right">
-        <div className="avatar-sm" onClick={() => { setCurrentUser(null); setPage("auth"); }}>{currentUser?.avatar}</div>
+        <div className="avatar-sm" onClick={() => { authActions.logout(); setPage("auth"); }}>{authActions?.user?.email?.slice(0,2).toUpperCase() || "YO"}</div>
       </div>
     </div>
   );
