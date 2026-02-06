@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createLeague, joinLeague, getUserLeagues, saveWeeklyPicks, getWeeklyPicks, createUserProfile } from "./firestore";
 
 // ─── MOCK DATA ───────────────────────────────────────────────────────────────
 const TEAMS = [
@@ -838,14 +839,15 @@ useEffect(() => {
   
   const handleSignup = async () => {
     if (!authEmail || !authPass || !authName) return;
-    setAuthError("");
-    try {
-      await authActions.signup(authEmail, authPass);
-      setPage("dashboard");
-    } catch (err) {
-      setAuthError(err.message);
-    }
-  };
+  setAuthError("");
+  try {
+    const userCredential = await authActions.signup(authEmail, authPass);
+    await createUserProfile(userCredential.user.uid, authEmail, authName);
+    setPage("dashboard");
+  } catch (err) {
+    setAuthError(err.message);
+  }
+};
 
   const handlePick = (gameId, teamId) => setPicks((p) => ({ ...p, [gameId]: teamId }));
   const handleBracketPick = (matchupId, teamId) => setBracketPicks((p) => ({ ...p, [matchupId]: teamId }));
@@ -1418,8 +1420,17 @@ useEffect(() => {
             </div>
             <div className="modal-actions">
               <button className="btn-cancel" onClick={() => setShowCreateModal(false)}>Cancel</button>
-              <button className="btn-primary" style={{ width: "auto", flex: 1, margin: 0 }} disabled={!newLeagueName.trim()}
-                onClick={() => { setShowCreateModal(false); setNewLeagueName(""); }}>Create League</button>
+             <button className="btn-primary" style={{ width: "auto", flex: 1, margin: 0 }} disabled={!newLeagueName.trim()}
+                onClick={async () => {
+                  try {
+                    const league = await createLeague(authActions.user.uid, newLeagueName);
+                    setShowCreateModal(false);
+                    setNewLeagueName("");
+                    alert(`League created! Code: ${league.code}`);
+                  } catch (err) {
+                    alert("Error: " + err.message);
+                  }
+                }}>Create League</button>
             </div>
           </div>
         </div>
